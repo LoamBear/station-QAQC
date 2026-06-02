@@ -1,0 +1,7 @@
+station,value_col,start,end,action,param,note,water_year,applied_by,applied_on
+nep1,T10m_avg_C,2013-06-11 14:00:00,2014-10-01 08:40:00,nan,,intermittent data,2014,ah,2024-07-25
+nep1,BP_avg_mbar,2011-10-19 09:00:00,2011-10-19 10:40:00,interpolate,,short dropout,2012,ah,2024-07-25
+nep2,Precip_mm,2017-08-25 13:40:00,2017-08-25 14:10:00,interpolate,,sensor blip,2017,ah,2024-07-25
+nep2,SR_avg_Wm2,2019-05-16 14:10:00,,scale,0.505249545,post-swap calibration,2019,ah,2024-07-25
+nep2,ST2_avg_C,2015-06-06 12:40:00,,set_flag,S,sensor degraded after this date,2015,ah,2024-07-25
+nep2,BP_avg_mbar,2023-05-10 06:00:00,2023-05-15 00:15:00,nan,,bad pressure run,2023,ah,2024-07-25
