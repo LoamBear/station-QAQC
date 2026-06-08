@@ -6,7 +6,7 @@ files, so the same code runs any network. Adding a network means adding a config
 folder, not editing code — which is what makes this work across the many
 networks you manage without a naming overhaul.
 
-The pipeline mirrors your existing levels:
+The pipeline mirrors existing levels:
 
 | Level | What it is | How it runs | Produced by |
 |-------|------------|-------------|-------------|
