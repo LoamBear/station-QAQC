@@ -6,7 +6,7 @@ files, so the same code runs any network. Adding a network means adding a config
 folder, not editing code — which is what makes this work across the many
 networks you manage without a naming overhaul.
 
-The pipeline mirrors your existing levels:
+The pipeline mirrors existing levels:
 
 | Level | What it is | How it runs | Produced by |
 |-------|------------|-------------|-------------|
@@ -29,6 +29,7 @@ wxqc/                 the engine (network-agnostic; you rarely touch this)
   flags.py            O / E / S provenance derivation
   edits.py            manual change-log engine (L3)
   pipeline.py         run_level15, run_level2, export_columns
+  plots.py            interactive QC review plots (raw/L1.5/L2/L3 overlays)
   config.py           config loaders + VarSpec
   diff.py             compare new output vs legacy output
 config/<network>/     all network-specific knowledge lives here
@@ -43,7 +44,7 @@ selftest.py           synthetic end-to-end check
 
 ## 2. Requirements
 
-Python 3.10+, `pandas`, `numpy`. From the project root, make sure `wxqc/` is on
+Python 3.10+, `pandas`, `numpy`, and `plotly` (for the QC review plots). From the project root, make sure `wxqc/` is on
 the path (running the drivers from the root handles this).
 
 ## 3. Config files
@@ -141,7 +142,34 @@ range — no need to edit the engine.
 
 No engine code changes.
 
-## 7. Validating against your current outputs
+## 7. QC review plots
+
+Both `run_pipeline.py` and `run_l3.py` have a `PLOTS` flag (on by default). When
+set, they write interactive HTML plots so whoever runs the pipeline can see how
+each variable changed at every step.
+
+- `run_pipeline.py` writes `plots/<station>_WY<year>/` — one HTML per variable
+  (plus an `index.html`), overlaying **raw → L1.5 → L2** with red markers on the
+  samples QC removed.
+- `run_l3.py` writes `Level_3/plots/<station>/` — the same, now including the
+  **L3** trace so the annual review shows all four levels together.
+
+Open `index.html` and click a variable, or open a variable's HTML directly. Plots
+are interactive (zoom into a storm, hover for values) via WebGL; plotly.js loads
+from a CDN so files stay a few MB each. One file per variable is deliberate — a
+single combined file embeds every variable's full 10-minute series and becomes too
+large for a browser. To plot ad hoc:
+
+```python
+from wxqc.plots import plot_variable, plot_station
+plot_station(df, specs, "nep3", "plots/nep3")   # all variables + index.html
+```
+
+`df` is the full working frame (raw + `_L1` + `_L2`, and `_L3` after
+`apply_manual_edits`); the `Level_1.5QC` / `Level_2QC` files retain those columns
+for re-plotting later.
+
+## 8. Validating against your current outputs
 ```python
 from wxqc.diff import compare_csv
 print(compare_csv("Level_2/nep4_WY2025_L2.csv", "legacy/nep4_WY2025_L2.csv"))
@@ -150,7 +178,7 @@ print(compare_csv("Level_2/nep4_WY2025_L2.csv", "legacy/nep4_WY2025_L2.csv"))
 Use this to confirm the refactor reproduces — or intentionally changes — the old
 results before trusting it.
 
-## 8. Things that intentionally differ from the legacy scripts (please confirm)
+## 9. Things that intentionally differ from the legacy scripts (please confirm)
 
 1. **Flag fix.** `derive_flags` uses `.isna()`, so the `S` branch now actually
    fires. Consequence: a value **removed** by QC (→ NaN) is now `S` (missing),

@@ -13,6 +13,7 @@ from .pipeline import run_level15, run_level2, export_columns
 from .edits import apply_manual_edits
 from .flags import derive_flags, OBSERVED, EDITED, SUSPECT
 from . import checks, sensors, diff
+from .plots import plot_station, plot_variable
 
 __all__ = [
     "VarSpec", "Thresholds",
@@ -21,4 +22,5 @@ __all__ = [
     "apply_manual_edits", "derive_flags",
     "OBSERVED", "EDITED", "SUSPECT",
     "checks", "sensors", "diff",
+    "plot_station", "plot_variable",
 ]

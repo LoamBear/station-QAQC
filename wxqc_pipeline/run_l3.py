@@ -26,6 +26,7 @@ L2_QC_DIR = DATA_ROOT / "Level_2QC"
 L3_DIR = DATA_ROOT / "Level_3"
 STATIONS = None                            # None = all, or e.g. ["nep1"]
 DT_COL = "datetime_PST"
+PLOTS = True                               # write QC review plots (raw/L1.5/L2/L3) per station
 # -------------------------------------------------------------------------- #
 
 
@@ -54,6 +55,10 @@ def main():
 
         wxqc.export_columns(df, specs, "_L3").to_csv(
             L3_DIR / f"{station}_L3.csv", index=False)
+
+        if PLOTS:
+            wxqc.plot_station(df, specs, station, L3_DIR / "plots" / station)
+
         print(f"  {station}: L3 written ({len(df)} rows)")
 
 

@@ -14,6 +14,8 @@ import pandas as pd
 
 import wxqc
 
+
+
 # ----------------------------- CONFIG ------------------------------------- #
 NETWORK = "nevcan"
 CONFIG_DIR = Path("config") / NETWORK
@@ -28,8 +30,10 @@ L2_QC_DIR = DATA_ROOT / "Level_2QC"        # full working frame, feeds L3
 STATIONS = None                            # None = all in stations.csv, or e.g. ["nep4"]
 YEARS = range(2012, 2026)                  # water years, end exclusive
 DT_COL = "datetime_PST"
+PLOTS = True                               # write QC review plots (raw/L1.5/L2) per station-year
+PLOTS_DIR = DATA_ROOT / "plots"
 # -------------------------------------------------------------------------- #
-
+os.chdir(r"C:\Users\bbingham\OneDrive - Desert Research Institute\Anne Heggli's files - NevCAN\data\QAQC_Dev")
 
 def main():
     specs = wxqc.load_variables(CONFIG_DIR / "variables.csv")
@@ -59,6 +63,9 @@ def main():
             wxqc.export_columns(df, specs, "_L2").to_csv(
                 L2_DIR / f"{station}_WY{year}_L2.csv", index=False)
             df.to_csv(L2_QC_DIR / f"{station}_WY{year}_L2QC.csv", index=False)
+
+            if PLOTS:
+                wxqc.plot_station(df, specs, station, PLOTS_DIR / f"{station}_WY{year}")
 
             print(f"  {station} WY{year}: L1.5 + L2 written")
 
