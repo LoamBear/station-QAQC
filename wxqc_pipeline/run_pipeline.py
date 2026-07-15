@@ -14,6 +14,8 @@ import pandas as pd
 
 import wxqc
 
+
+
 # ----------------------------- CONFIG ------------------------------------- #
 NETWORK = "nevcan"
 CONFIG_DIR = Path("config") / NETWORK
@@ -29,7 +31,7 @@ STATIONS = None                            # None = all in stations.csv, or e.g.
 YEARS = range(2012, 2026)                  # water years, end exclusive
 DT_COL = "datetime_PST"
 # -------------------------------------------------------------------------- #
-
+os.chdir(r"C:\Users\bbingham\OneDrive - Desert Research Institute\Anne Heggli's files - NevCAN\data\QAQC_Dev")
 
 def main():
     specs = wxqc.load_variables(CONFIG_DIR / "variables.csv")
