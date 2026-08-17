@@ -7,15 +7,29 @@ each edit is a row in manual_edits.csv:
     station, value_col, start, end, action, param, note, water_year, applied_by, applied_on
 
 `start`/`end` bound the edit window (end exclusive; leave end blank for "from
-start onward"). Actions and their `param`:
+start onward"; leave both blank to apply across the whole series). Actions and
+their `param`:
 
-    nan             -> set window to missing                     (param ignored)
-    interpolate     -> linear-interpolate across the window      (param ignored)
-    offset          -> add param to the window                   (param = number)
-    scale           -> multiply window by param                  (param = number; calibration)
-    clamp           -> set window to the constant param          (param = number)
-    rolling_median  -> replace window with centered rolling med  (param = window size, samples)
-    set_flag        -> set the flag column in the window to param (param = 'S', etc.)
+    nan               -> set window to missing                     (param ignored)
+    interpolate       -> linear-interpolate across the window      (param ignored)
+    interpolate_limit -> linear-interpolate gaps <= param samples   (param = max gap length, samples)
+                         within the window; longer gaps are left alone -- the
+                         windowed analog of engine's fill_short_gaps, for a
+                         systemic per-station gap-length rule rather than a
+                         one-off dated edit (typically blank start/end = whole series)
+    nan_if_minute     -> within the window, null samples at minute  (param = minute-of-hour, 0-59)
+                         `param` past the hour, every hour (e.g. a
+                         recurring noisy reading right after each
+                         hourly cycle)
+    nan_if_gt         -> within the window, null samples where the  (param = number)
+                         value exceeds `param` (a station-specific
+                         sanity ceiling looser/tighter than the L1.5
+                         range check)
+    offset            -> add param to the window                   (param = number)
+    scale             -> multiply window by param                  (param = number; calibration)
+    clamp             -> set window to the constant param          (param = number)
+    rolling_median    -> replace window with centered rolling med  (param = window size, samples)
+    set_flag          -> set the flag column in the window to param (param = 'S', etc.)
 
 Edits are applied in file order, so later rows can build on earlier ones. L3 is
 regenerated deterministically from L2 + this log; appending a water year's review
@@ -24,6 +38,7 @@ just adds rows.
 import numpy as np
 import pandas as pd
 
+from .checks import fill_short_gaps
 from .flags import derive_flags
 
 
@@ -68,6 +83,15 @@ def apply_manual_edits(df, edits, specs, station,
         elif action == "interpolate":
             filled = df[col].interpolate(method="linear", limit_area="inside")
             df.loc[m, col] = filled[m]
+        elif action == "interpolate_limit":
+            filled = fill_short_gaps(df[col], int(float(param)))
+            df.loc[m, col] = filled[m]
+        elif action == "nan_if_minute":
+            is_minute = df[dt_col].dt.minute == int(float(param))
+            df.loc[m & is_minute, col] = np.nan
+        elif action == "nan_if_gt":
+            over = df[col] > float(param)
+            df.loc[m & over, col] = np.nan
         elif action == "offset":
             df.loc[m, col] = df.loc[m, col] + float(param)
         elif action == "scale":

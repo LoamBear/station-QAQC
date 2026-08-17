@@ -64,6 +64,7 @@ One row per variable. Columns:
 | `range_action` | `nan`, `clamp_high_100`, `nan_or_zero`, `clamp`, or `keep` |
 | `roc_key` | single-value key in `thresholds.csv` (e.g. `T_roc`); blank = no ROC check |
 | `interp_limit` | max gap length (samples) to linearly fill at L2; blank = no fill |
+| `discontinuity_limit` | turns on the discontinuity-aware fill (needs `roc_key`); gaps longer than this also require non-"free-floating" anchors (see below); blank = off, plain `interp_limit` fill applies |
 | `handler` | name in `sensors.HANDLERS` for sensor-specific logic; blank = none |
 
 `range_action` presets, drawn from your scripts:
@@ -72,6 +73,29 @@ One row per variable. Columns:
 - `nan_or_zero` — above max → missing, below min → 0 (your shortwave rule)
 - `clamp` — pin to the bounds
 - `keep` — record the range but don't enforce (e.g. wind direction)
+
+### Discontinuity-aware gap fill
+`fill_short_gaps` (used at L2) normally fills any interior gap up to `interp_limit`
+samples by straight-line interpolation. That's wrong when the two sides of the gap
+are genuinely different readings (e.g. a sensor swap/recalibration), not just a
+dropout — interpolating draws a fake ramp between two disconnected regimes.
+
+Setting `discontinuity_limit` on a variable (needs `roc_key` too) turns on a
+magnitude check across the *whole* `interp_limit` window: for any gap up to
+`interp_limit` samples, the jump between the value just before and just after it
+is compared to `roc_threshold * gap_length`. Within that budget, the gap fills
+normally; over it, it's a discontinuity and stays `NaN`, which flows into the `S`
+(Suspect) flag automatically for review.
+
+Gaps *longer* than `discontinuity_limit` (but still within `interp_limit`) face one
+more requirement: neither boundary value may itself be "free-floating" — a single
+valid reading flanked by `NaN` on both sides (e.g. sandwiched between two other
+rejected gaps). A lone point like that isn't a trustworthy anchor for a several-
+sample fill, so such gaps are left for review even if the raw jump looks small.
+
+This is opt-in per variable (blank = off, falls back to plain `interp_limit` fill)
+so it can be rolled out to more variables incrementally; currently only
+`BP_avg_mbar` uses it (`interp_limit=6`, `discontinuity_limit=3`).
 
 ### thresholds.csv
 Your existing `QC_L1rangecheck.csv` format, unchanged: rows are parameter keys
@@ -83,12 +107,15 @@ One row per edit:
 `station, value_col, start, end, action, param, note, water_year, applied_by, applied_on`
 
 `start`/`end` bound the window (**end exclusive**; blank end = "from start
-onward"). Actions:
+onward"; blank start **and** end = the whole series). Actions:
 
 | action | effect | `param` |
 |--------|--------|---------|
 | `nan` | window → missing | — |
 | `interpolate` | linear-interpolate across the window | — |
+| `interpolate_limit` | linear-interpolate gaps ≤ `param` samples within the window; longer gaps untouched — a systemic gap-length rule (usually whole-series) rather than a one-off dated fix | max gap length (samples) |
+| `nan_if_minute` | within the window, null samples at minute `param` past every hour (e.g. a recurring noisy reading) | minute-of-hour, 0–59 |
+| `nan_if_gt` | within the window, null samples whose value exceeds `param` (a station-specific sanity ceiling) | number |
 | `offset` | add to window | number |
 | `scale` | multiply window (calibration) | number |
 | `clamp` | set window to a constant | number |
@@ -149,10 +176,17 @@ set, they write interactive HTML plots so whoever runs the pipeline can see how
 each variable changed at every step.
 
 - `run_pipeline.py` writes `plots/<station>_WY<year>/` — one HTML per variable
-  (plus an `index.html`), overlaying **raw → L1.5 → L2** with red markers on the
-  samples QC removed.
+  (plus an `index.html`), overlaying **raw → L1.5 → L2**.
 - `run_l3.py` writes `Level_3/plots/<station>/` — the same, now including the
   **L3** trace so the annual review shows all four levels together.
+
+Markers show data *quality*, not removal: each level that newly flags a point
+`'E'` or `'S'` (not already flagged at a prior level) gets its own marker, so you
+can see which step first raised it — an orange square where the value was
+**Edited** (modified but kept), a pink diamond where it was kept but flagged
+**Suspect** (e.g. a manual `set_flag` edit, or a gap-fill that reused an
+already-suspect sample). Points that were actually removed (`'S'` with no value)
+get no marker — the gap in the line is the signal.
 
 Open `index.html` and click a variable, or open a variable's HTML directly. Plots
 are interactive (zoom into a storm, hover for values) via WebGL; plotly.js loads

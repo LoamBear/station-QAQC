@@ -46,7 +46,8 @@ def roc_check(s: pd.Series, limit: float) -> pd.Series:
 
 
 # ---- gap interpolation ---------------------------------------------------- #
-def fill_short_gaps(s: pd.Series, limit: int) -> pd.Series:
+def fill_short_gaps(s: pd.Series, limit: int, roc_limit: float = None,
+                    discontinuity_limit: int = None) -> pd.Series:
     """Linearly interpolate interior NaN runs of length <= `limit`. Longer gaps
     are left as NaN, and leading/trailing NaNs are never filled (can't
     extrapolate linearly).
@@ -54,6 +55,20 @@ def fill_short_gaps(s: pd.Series, limit: int) -> pd.Series:
     This is a clarified reimplementation of the legacy
     `rolling(7).apply(all-isnan).shift(-6)` construct, which had edge quirks.
     The behavior is: fill small gaps, leave big ones alone.
+
+    If `roc_limit` is given, a gap (of any length up to `limit`) is also
+    excluded from filling (left as NaN, which flows into the 'S' Suspect flag)
+    when the jump between the values just before and just after it exceeds
+    `roc_limit * gap_length` -- i.e. a step change too big to be explained by
+    the variable's own rate-of-change threshold, most likely a sensor
+    discontinuity rather than a real gap to bridge. `roc_limit=None` (the
+    default) reproduces plain length-gated fill.
+
+    If `discontinuity_limit` is also given (< `limit`), gaps longer than it
+    face one more requirement: neither boundary value may itself be a
+    "free-floating" sample -- a single valid reading flanked by NaN on both
+    sides. Such a lone point isn't a trustworthy anchor for a several-sample
+    fill; if a gap is bounded by one, it's left for review instead.
     """
     s = s.copy()
     isna = s.isna()
@@ -62,11 +77,28 @@ def fill_short_gaps(s: pd.Series, limit: int) -> pd.Series:
     run_id = (isna != isna.shift()).cumsum()
     run_len = isna.groupby(run_id).transform("size")
     fillable = isna & (run_len <= limit)
+
+    if roc_limit is not None and fillable.any():
+        jump = (s.bfill() - s.ffill()).abs()
+        discontinuous = fillable & (jump > roc_limit * run_len)
+        fillable = fillable & ~discontinuous
+
+    if discontinuity_limit is not None and fillable.any():
+        notna = ~isna
+        free_floating = notna & isna.shift(1, fill_value=True) & isna.shift(-1, fill_value=True)
+        anchor_before_ff = free_floating.shift(1, fill_value=False)
+        anchor_after_ff = free_floating.shift(-1, fill_value=False)
+        run_has_ff_anchor = (anchor_before_ff | anchor_after_ff).groupby(run_id).transform("max")
+        unanchored = fillable & (run_len > discontinuity_limit) & run_has_ff_anchor
+        fillable = fillable & ~unanchored
+
     filled = s.interpolate(method="linear", limit_area="inside")
     s[fillable] = filled[fillable]
     return s
 
 
 # ---- smoothing ------------------------------------------------------------ #
-def rolling_median(s: pd.Series, window: int, center: bool = True) -> pd.Series:
-    return s.rolling(window, center=center, min_periods=1).median()
+def rolling_median(s: pd.Series, window: int, center: bool = True,
+                   min_frac: float = 0.5) -> pd.Series:
+    min_periods = max(1, int(round(window * min_frac)))
+    return s.rolling(window, center=center, min_periods=min_periods).median()

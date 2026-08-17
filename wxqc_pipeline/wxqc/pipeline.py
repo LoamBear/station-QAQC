@@ -29,6 +29,15 @@ def _simple_checks(s, sp, thr, station):
     return s
 
 
+def _fill_gaps(s, sp, thr, station):
+    if not sp.interp_limit:
+        return s
+    roc_limit = (thr.value(station, sp.roc_key)
+                if sp.discontinuity_limit and sp.roc_key else None)
+    return fill_short_gaps(s, sp.interp_limit, roc_limit=roc_limit,
+                           discontinuity_limit=sp.discontinuity_limit)
+
+
 def run_level15(df, specs, thr, station):
     present = [sp for sp in specs if sp.value_col in df.columns]
 
@@ -64,8 +73,7 @@ def run_level2(df, specs, thr, station):
         if sp.handler:
             continue
         s = df[sp.value_col + "_L1"].astype("float64").copy()
-        if sp.interp_limit:
-            s = fill_short_gaps(s, sp.interp_limit)
+        s = _fill_gaps(s, sp, thr, station)
         new[sp.value_col + "_L2"] = _simple_checks(s, sp, thr, station)
     if new:
         df = pd.concat([df, pd.DataFrame(new, index=df.index)], axis=1)
@@ -74,8 +82,7 @@ def run_level2(df, specs, thr, station):
         if not sp.handler:
             continue
         s = df[sp.value_col + "_L1"].astype("float64").copy()
-        if sp.interp_limit:
-            s = fill_short_gaps(s, sp.interp_limit)
+        s = _fill_gaps(s, sp, thr, station)
         df[sp.value_col + "_L2"] = HANDLERS[sp.handler](df, s, thr, station, level="L2")
 
     for sp in present:

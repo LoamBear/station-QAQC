@@ -16,6 +16,9 @@ class VarSpec:
     range_action: str = "nan"      # nan | clamp_high_100 | nan_or_zero | clamp | keep
     roc_key: str = ""              # key into thresholds.csv (single value); "" = no ROC check
     interp_limit: Optional[int] = None   # max gap (samples) to fill at L2; None = no fill
+    discontinuity_limit: Optional[int] = None  # max gap (samples) eligible for the ROC-scaled
+                                    # discontinuity check (needs roc_key); None = feature off,
+                                    # falls back to interp_limit's plain length-based fill
     handler: str = ""              # name in sensors.HANDLERS; "" = none
 
 
@@ -43,6 +46,7 @@ def load_variables(path):
     specs = []
     for _, r in raw.iterrows():
         il = str(r["interp_limit"]).strip()
+        dl = str(r.get("discontinuity_limit", "")).strip()
         specs.append(VarSpec(
             value_col=r["value_col"],
             flag_col=r["flag_col"],
@@ -50,6 +54,7 @@ def load_variables(path):
             range_action=(str(r["range_action"]).strip() or "nan"),
             roc_key=str(r["roc_key"]).strip(),
             interp_limit=(int(float(il)) if il not in ("", "nan") else None),
+            discontinuity_limit=(int(float(dl)) if dl not in ("", "nan") else None),
             handler=str(r["handler"]).strip(),
         ))
     return specs
