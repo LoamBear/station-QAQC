@@ -1,0 +1,94 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Oct 21 11:02:23 2024
+
+@author: anne
+"""
+import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Set your working directory
+os.chdir('C:/Users/anne/OneDrive - Desert Research Institute/Data/NevCAN')
+
+# Load and preprocess your data
+df_snowdepth = pd.read_csv('Level_3/snowdepth_nep2.csv', parse_dates=['datetime_PST'])
+df_snowdepth = df_snowdepth[(df_snowdepth['datetime_PST'] >= "2022-09-30 23:50")]
+df_snowdepth = df_snowdepth.fillna(-99.99)
+
+# Ensure we're using the right backend
+%matplotlib qt
+
+class DraggablePlot:
+    def __init__(self, x, y, static_x, static_y1, static_y2):
+        self.x = x  # Draggable points
+        self.y = y  # Draggable points
+        self.static_x = static_x  # Static x points
+        self.static_y1 = static_y1  # Static y points for first plot
+        self.static_y2 = static_y2  # Static y points for second plot
+
+        self.fig, self.ax = plt.subplots()
+        self.line, = self.ax.plot(self.x, self.y, 'o', markersize=5, picker=5, color = 'black', label='Daily Snow Depth (Draggable)', zorder=2)
+        self.ax.plot(self.static_x, self.static_y1, 's', markersize=2, color='orange', label='Avg Snow Depth L1', zorder=1)  # First static points
+        self.ax.plot(self.static_x, self.static_y2, 's', markersize=2, color='dodgerblue', label='Avg Snow Depth L2', zorder=1)  # Second static points
+        self.ax.legend()
+
+        self.selected_index = None
+        self.cid = self.fig.canvas.mpl_connect('button_press_event', self.on_click)
+
+    def on_click(self, event):
+        if event.inaxes:
+            # Check distances for draggable points
+            distances = np.sqrt((self.x - event.xdata)**2 + (self.y - event.ydata)**2)
+            ind = np.argmin(distances)
+            if distances[ind] < 1000:  # Adjust threshold as needed
+                if ind < len(self.x):  # Check if index is valid
+                    self.selected_index = ind
+                    self.cid_motion = self.fig.canvas.mpl_connect('motion_notify_event', self.on_motion)
+                    self.cid_release = self.fig.canvas.mpl_connect('button_release_event', self.on_release)
+
+    def on_motion(self, event):
+        if event.inaxes and self.selected_index is not None:
+            if self.selected_index < len(self.x):  # Check if index is valid
+                # Keep x static, change only y, but enforce a minimum value of 0
+                new_y = event.ydata
+                self.y[self.selected_index] = max(0, new_y)  # Ensure y is not less than 0
+                self.line.set_data(self.x, self.y)  # Update line with new y values
+                self.fig.canvas.draw_idle()
+
+    def on_release(self, event):
+        self.fig.canvas.mpl_disconnect(self.cid_motion)
+        self.fig.canvas.mpl_disconnect(self.cid_release)
+        self.selected_index = None
+        
+    def save_data(self):
+        # Create a DataFrame with original and updated values
+        updated_df = pd.DataFrame({
+            'datetime': pd.to_datetime(self.static_x),  # Convert to datetime
+            'original_snowdepth': self.y,
+            'updated_snowdepth': self.updated_y
+        })
+
+        # Save the updated DataFrame to a CSV file
+        updated_df.to_csv('Level_3/updated_snowdepth_data.csv', index=False)
+        print("Updated data exported to 'updated_snowdepth_data.csv'.")
+
+# Prepare data for plotting
+static1_y = df_snowdepth['snowdepth_avg_mm_L1'].values  # First static column
+static1_x = df_snowdepth.index.values  # Static x-values (same as datetime for simplicity)
+static2_y = df_snowdepth['snowdepth_avg_mm_L2'].values  # Second static column
+static2_x = df_snowdepth.index.values  # Static x-values (same as datetime for simplicity)
+
+# Prepare draggable points
+x = df_snowdepth.index.values
+y = df_snowdepth['snowdepth_d'].values  # Draggable snow depth column
+
+# Create and display the plot
+plot = DraggablePlot(x, y, static1_x, static1_y, static2_y)
+plt.show()
+
+
+
+## export complete daily csv. and export metadata .csv with datetime included with index - can I use numeric datetime format?
+## Export only midnight stamp data?

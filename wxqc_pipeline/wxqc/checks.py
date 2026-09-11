@@ -102,3 +102,28 @@ def rolling_median(s: pd.Series, window: int, center: bool = True,
                    min_frac: float = 0.5) -> pd.Series:
     min_periods = max(1, int(round(window * min_frac)))
     return s.rolling(window, center=center, min_periods=min_periods).median()
+
+
+# ---- cross-variable consistency -------------------------------------------- #
+def minmax_avg_inconsistent(min_s: pd.Series, max_s: pd.Series, avg_s: pd.Series) -> pd.Series:
+    """Boolean mask, True wherever min/max/avg readings from the same sensor at
+    the same timestamp don't make physical sense: avg outside [min, max], or
+    min > max. A sample missing any of the three can't be judged and is never
+    flagged here. Values are never touched -- the caller decides what to do
+    with the flagged positions (this engine flags them Suspect, doesn't alter
+    the readings)."""
+    have_all = min_s.notna() & max_s.notna() & avg_s.notna()
+    bad = (avg_s < min_s) | (avg_s > max_s) | (min_s > max_s)
+    return bad.fillna(False) & have_all
+
+
+def minmax_avg_incomplete(min_s: pd.Series, max_s: pd.Series, avg_s: pd.Series) -> pd.Series:
+    """Boolean mask, True wherever at least one of min/max/avg is missing while
+    at least one other is present -- a partial reading from a sensor_group
+    whose columns all structurally exist for this station (the caller only
+    runs this where that's true), so a missing member here means a sibling
+    that normally reports went missing just now, not that the group is simply
+    absent from this network. A timestamp where all three are missing isn't
+    flagged -- that's an ordinary missing sample, not a partial one."""
+    present = pd.concat({"min": min_s.notna(), "max": max_s.notna(), "avg": avg_s.notna()}, axis=1)
+    return present.any(axis=1) & ~present.all(axis=1)

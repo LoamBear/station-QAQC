@@ -65,7 +65,7 @@ def main():
             df.to_csv(L2_QC_DIR / f"{station}_WY{year}_L2QC.csv", index=False)
 
             if PLOTS:
-                wxqc.plot_station(df, specs, station, PLOTS_DIR / f"{station}_WY{year}")
+                wxqc.plot_station(df, specs, station, PLOTS_DIR / f"{station}_WY{year}", thr=thr)
 
             print(f"  {station} WY{year}: L1.5 + L2 written")
 

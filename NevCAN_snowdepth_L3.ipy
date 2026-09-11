@@ -1,0 +1,154 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Oct 21 11:02:23 2024
+
+@author: anne
+"""
+import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Button
+
+# Set your working directory
+os.chdir('C:/Users/anne/OneDrive - Desert Research Institute/Data/NevCAN') #personal computer
+# os.chdir('C:/Users/aheggli/OneDrive - Desert Research Institute/Data/NevCAN') #work computer
+station = 'nep3'
+
+wateryear_s = "2011"
+wateryear_e = "2012"
+ 
+# Load and preprocess your data
+df_snowdepth = pd.read_csv('Level_3/snowdepth_'+station+'.csv', parse_dates=['datetime_PST'])
+df_snowdepth = df_snowdepth.set_index('datetime_PST').loc[wateryear_s+'-10-01':wateryear_e+'-09-30'].reset_index() 
+df_snowdepth = df_snowdepth.fillna(-99.99)
+
+# Ensure we're using the right backend
+%matplotlib qt
+
+#Update this to do one WY at a time
+
+class DraggablePlot:
+    def __init__(self, x, y, static_x, static_y1, static_y2):
+        self.x = x  # Draggable points
+        self.y = y  # Draggable points
+        self.static_x = static_x  # Static x points
+        self.static_y1 = static_y1  # Static y points for first plot
+        self.static_y2 = static_y2  # Static y points for second plot
+
+        self.fig, self.ax = plt.subplots()
+        self.line, = self.ax.plot(self.x, self.y, 'o', markersize=5, picker=5, color = 'black', label='Daily Snow Depth (Draggable)', zorder=2)
+        self.ax.plot(self.static_x, self.static_y1, 's', markersize=2, color='orange', label='Avg Snow Depth L1', zorder=1)  # First static points
+        self.ax.plot(self.static_x, self.static_y2, 's', markersize=2, color='dodgerblue', label='Avg Snow Depth L2', zorder=1)  # Second static points
+        self.ax.legend()
+
+        self.selected_index = None
+        self.cid = self.fig.canvas.mpl_connect('button_press_event', self.on_click)
+        
+        # # Add Save button
+        # self.button_ax = self.fig.add_axes([0.8, 0.05, 0.1, 0.075])
+        # self.button = Button(self.button_ax, 'Save Data')
+        # self.button.on_clicked(self.save_data)
+
+        # Add Save button
+        self.button_ax = self.fig.add_axes([0.9, 0.05, 0.1, 0.075])
+        self.button = Button(self.button_ax, 'Save Daily Data')
+        self.button.on_clicked(self.save_dailydata)
+
+    def on_click(self, event):
+        if event.inaxes:
+            # Check distances for draggable points
+            distances = np.sqrt((self.x - event.xdata)**2 + (self.y - event.ydata)**2)
+            ind = np.argmin(distances)
+            if distances[ind] < 75:  # Adjust threshold as needed
+                if ind < len(self.x):  # Check if index is valid
+                    self.selected_index = ind
+                    self.cid_motion = self.fig.canvas.mpl_connect('motion_notify_event', self.on_motion)
+                    self.cid_release = self.fig.canvas.mpl_connect('button_release_event', self.on_release)
+
+    def on_motion(self, event):
+        if event.inaxes and self.selected_index is not None:
+            if self.selected_index < len(self.x):  # Check if index is valid
+                # Keep x static, change only y, but enforce a minimum value of 0
+                new_y = event.ydata
+                self.y[self.selected_index] = max(0, new_y)  # Ensure y is not less than 0
+                self.line.set_data(self.x, self.y)  # Update line with new y values
+                self.fig.canvas.draw_idle()
+
+    def on_release(self, event):
+        self.fig.canvas.mpl_disconnect(self.cid_motion)
+        self.fig.canvas.mpl_disconnect(self.cid_release)
+        self.selected_index = None
+    
+    # def save_data(self, event=None):
+    #     try:
+    #         # Create a copy of the original DataFrame
+    #         updated_df = df_snowdepth.copy()
+            
+    #         # Rename the original column to preserve its original values
+    #         updated_df = updated_df.rename(columns={'snowdepth_mm_d': 'original_snowdepth_mm_d'})
+    
+    #         # Add the updated snow depth values from self.y as a new column
+    #         updated_df['snowdepth_mm_L3'] = self.y
+    
+    #         # Save the DataFrame with both original and updated columns
+    #         updated_df.to_csv('Level_3/updated_snowdepth_data.csv', index=False)
+    #         print("Full dataset with original and updated snow depth exported to 'Level_3/updated_snowdepth_data.csv'.")
+            
+    #     except Exception as e:
+    #         print(f"An error occurred while saving the data: {e}")
+            
+    def save_dailydata(self, event=None):
+        try:
+            # Create a copy of the original DataFrame
+            updated_df = df_snowdepth.copy()
+    
+            # Rename the original snow depth column to keep both values
+            updated_df = updated_df.rename(columns={'snowdepth_mm_d': 'snowdepth_mm_L2'})
+    
+            # Add the updated snow depth values from self.y as a new column
+            updated_df['snowdepth_mm_L3'] = self.y
+    
+            # Add a new column for the updated snow depth values from self.y
+            # Replace values: Set -99.99 and values less than 2 to 0, then round to nearest integer
+            updated_y = np.where((self.y < 5) | (self.y == -99.99), 0, self.y)
+            updated_y = np.round(updated_y).astype(int)  # Round and convert to integers
+    
+            updated_df['snowdepth_mm_L3'] = updated_y
+    
+            # Filter for midnight timestamps only
+            midnight_df = updated_df[updated_df['datetime_PST'].dt.time == pd.Timestamp("00:00:00").time()]
+    
+            # Select only the desired columns from the midnight_df
+            columns_to_export = ['datetime_PST', 'snowdepth_mm_L2', 'snowdepth_mm_L3']
+            midnight_df = midnight_df[columns_to_export]
+                        
+            # Save the filtered DataFrame to a CSV
+            midnight_df.to_csv('Level_3/'+station+'_WY'+wateryear_e+'_sd_L3.csv', index=False)
+            print("Dataset with midnight timestamps and adjusted values exported to 'Level_3/updated_snowdepth_data_midnight.csv'.")
+            
+        except Exception as e:
+            print(f"An error occurred while saving the data: {e}")
+                
+# Prepare data for plotting
+static1_y = df_snowdepth['snowdepth_avg_mm_L1'].values  # First static column
+static1_x = df_snowdepth.index.values  # Static x-values (same as datetime for simplicity)
+
+static2_y = df_snowdepth['snowdepth_avg_mm_L2'].values  # Second static column
+static2_x = df_snowdepth.index.values  # Static x-values (same as datetime for simplicity)
+
+# # Prepare draggable points
+x = df_snowdepth.index.values
+# y = df_snowdepth['snowdepth_mm_d'].values  # Draggable snow depth column
+y = df_snowdepth['snowdepth_mm_d'].values.copy()
+
+# Create and display the plot
+plot = DraggablePlot(x, y, static1_x, static1_y, static2_y)
+plt.show()
+
+## export complete daily csv. and export metadata .csv with datetime included with index - can I use numeric datetime format?
+## Export only midnight stamp data?
+
+#%%
+
+

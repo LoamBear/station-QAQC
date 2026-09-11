@@ -32,6 +32,7 @@ PLOTS = True                               # write QC review plots (raw/L1.5/L2/
 
 def main():
     specs = wxqc.load_variables(CONFIG_DIR / "variables.csv")
+    thr = wxqc.load_thresholds(CONFIG_DIR / "thresholds.csv")
     edits = wxqc.load_manual_edits(CONFIG_DIR / "manual_edits.csv")
     stations_df = wxqc.load_stations(CONFIG_DIR / "stations.csv")
     stations = STATIONS or list(stations_df["station_id"])
@@ -57,7 +58,7 @@ def main():
             L3_DIR / f"{station}_L3.csv", index=False)
 
         if PLOTS:
-            wxqc.plot_station(df, specs, station, L3_DIR / "plots" / station)
+            wxqc.plot_station(df, specs, station, L3_DIR / "plots" / station, thr=thr, edits=edits)
 
         print(f"  {station}: L3 written ({len(df)} rows)")
 
