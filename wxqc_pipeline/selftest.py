@@ -184,4 +184,30 @@ assert clamped.any(), "test setup should have produced some clamped RH values"
 assert rh_reason[clamped].str.contains("range check").all(), \
     "a clamped-but-kept value should explain itself via the range check, not silently"
 
+# ---- configurable sample_freq (stations.csv) ----------------------------
+# regrid_timestamps/run_level2 must work at whatever cadence a network logs
+# at, not just NevCAN's own 10-minute rate. Build a small hourly series with
+# a short fillable gap and a real structural outage (rows missing entirely,
+# not NaN), and confirm the grid lands on hourly boundaries.
+hourly_idx = pd.date_range("2020-01-01", periods=48, freq="1h")
+hdf = pd.DataFrame({"datetime_PST": hourly_idx, "stationid": "nep2"})
+hdf["T_avg_C"] = 10.0 + np.arange(48) * 0.1
+hdf.loc[10:12, "T_avg_C"] = np.nan  # 3-hour gap, fillable (interp_limit=6)
+hdf = pd.concat([hdf.iloc[:20], hdf.iloc[26:]], ignore_index=True)  # rows 20-25 absent: 6h outage
+
+t_specs = [s for s in specs if s.value_col == "T_avg_C"]
+hdf = wxqc.run_level15(hdf, t_specs, thr, "nep2")
+hdf = wxqc.run_level2(hdf, t_specs, thr, "nep2", freq="1h")
+
+steps = hdf["datetime_PST"].diff().dropna().unique()
+assert list(steps) == [pd.Timedelta("1h")], \
+    f"regrid at freq='1h' should produce hourly spacing throughout, got {steps}"
+assert hdf.loc[hdf["timestamp_generated"], "datetime_PST"].dt.minute.eq(0).all(), \
+    "generated rows should land on the hourly grid, not a 10-minute one"
+assert hdf["timestamp_generated"].sum() == 6, \
+    "the 6-hour structural outage should insert exactly 6 generated rows"
+assert hdf.loc[10:12, "T_avg_C_L2"].notna().all(), \
+    "the short (3-sample) gap should still fill correctly at hourly cadence"
+print("OK: run_level2 regrids and gap-fills correctly at a non-default sample_freq (1h)")
+
 print("OK: pipeline ran end to end")

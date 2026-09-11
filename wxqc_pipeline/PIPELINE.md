@@ -8,14 +8,17 @@ NevCAN wxqc — QAQC PIPELINE MAP
 Legend:  ●  live now      ○  planned / dormant (not currently wired)
 
 CONFIG (drives everything below — no engine code names a variable)
-  stations.csv      — station_id, por_start/end, timezone
+  stations.csv      — station_id, por_start/end, timezone, sample_freq
+                       (native logging interval, e.g. "10min"/"1H"/"15min" —
+                       controls the Stage 2 regrid, per station)
   variables.csv     — per-variable: range/roc keys, interp/discontinuity limits,
                        handler, sensor_group/role, depends_on, suspect_if_var/gt
   thresholds.csv    — per-station min/max/roc values, keyed by variables.csv
   manual_edits.csv  — the L3 change log (one row per human edit)
   │
   ▼
-RAW   Level_1/{station}_WY{year}_L1.csv   (10-min observations, per station-year)
+RAW   Level_1/{station}_WY{year}_L1.csv   (10-min for NevCAN, per station-year —
+                                            stations.csv's sample_freq elsewhere)
   │
   ▼
 STAGE 1 — L1.5  (run_level15 — per variable, then cross-variable)
@@ -34,7 +37,8 @@ STAGE 1 — L1.5  (run_level15 — per variable, then cross-variable)
   │
   ▼   Level_1.5/  +  Level_1.5QC/
 STAGE 2 — regrid_timestamps  (first step of run_level2)
-  ●  reindex onto a continuous 10-min grid; real gaps → NaN rows,
+  ●  reindex onto a continuous grid at the station's own sample_freq
+     (stations.csv — 10min for NevCAN); real gaps → NaN rows,
      timestamp_generated=True (fixes positional-adjacency bugs in ROC/gap-fill)
   ●  off-grid raw stamps excluded from the grid, counted per station
   ○  PLANNED: snap off-grid stamps to the nearest slot instead of excluding

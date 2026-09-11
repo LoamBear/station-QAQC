@@ -43,6 +43,8 @@ run_l3.py             driver: apply the change log -> L3
 edit_l3.py            driver: interactive editor for one station/group -> manual_edits.csv
 selftest.py           synthetic end-to-end check
 selftest_editor.py    non-interactive check of the editor's drag/click logic
+local_settings.example.py   template for your own DATA_ROOT -- copy to
+                             local_settings.py (gitignored, not committed)
 ```
 
 ## 2. Requirements
@@ -53,11 +55,23 @@ imports it, so the rest of the pipeline runs fine without it. From the project
 root, make sure `wxqc/` is on the path (running the drivers from the root
 handles this).
 
+One-time setup: `cp local_settings.example.py local_settings.py` and fill in
+`DATA_ROOT` — the folder on *your* machine holding `Level_1/`, `Level_2/`,
+etc. `local_settings.py` is gitignored, so your real data path never ends up
+in shared source; `run_pipeline.py` and `edit_l3.py` both fail with a clear
+message pointing here if it's missing.
+
 ## 3. Config files
 
 ### stations.csv
-One row per station: `station_id, por_start, por_end, timezone`. The period of
-record bounds the L3 export.
+One row per station: `station_id, por_start, por_end, timezone, sample_freq`.
+The period of record bounds the L3 export. `sample_freq` is the station's
+native logging interval, as a pandas frequency string (`"10min"`, `"1H"`,
+`"15min"`, `"1S"`, whatever the network's own infrastructure runs) — it
+controls the grid `regrid_timestamps` builds at L2 (see timestamp continuity,
+below). Per-station rather than a single network-wide setting, in case a
+network ever mixes logging rates (e.g. an equipment upgrade partway through
+its history). Missing the column falls back to `"10min"`.
 
 ### variables.csv — the heart of a network's config
 One row per variable. Columns:
@@ -194,7 +208,9 @@ earlier, then "gap-filled" with a value blended from both sides of the outage.)
 
 `run_level2` calls `regrid_timestamps` as its first step, before any checks run,
 to fix this. It reindexes onto a continuous grid at the station's own sampling
-interval (10 minutes) spanning the data's own timestamp range, inserting `NaN`
+interval — `stations.csv`'s `sample_freq` (NevCAN runs `"10min"`; another
+network might be `"1H"`, `"15min"`, `"1S"`, whatever its own infrastructure
+logs at) — spanning the data's own timestamp range, inserting `NaN`
 rows for every missing slot — so position tracks time again by the time
 `fill_short_gaps`/`roc_check` see the data. `L1.5` is untouched (it keeps
 whatever raw timestamps came in); `L2` and everything downstream (`L3`, plots)
@@ -205,12 +221,12 @@ see the gridded version. Two extra things come out of this:
   published `L2`/`L2QC` files, and shaded as an opaque gray band on the QC plots
   — visually distinct from the thinner "gap in the line" used for an ordinary
   missing value at a real timestamp.
-- Any raw timestamp that isn't exactly on the 10-minute grid (e.g. `:07` instead
-  of `:00`/`:10`/…) can't occupy a slot without corrupting the grid, so it's
-  excluded from the regridded frame rather than silently colliding with a
-  neighbor; `run_pipeline.py` prints a count per station if this happens. This
-  is, in effect, already "masking out data that isn't on the 10-minute grid" —
-  if you'd rather snap those timestamps to the nearest slot instead of excluding
+- Any raw timestamp that isn't exactly on the `sample_freq` grid (e.g. `:07`
+  instead of `:00`/`:10`/… at `"10min"`) can't occupy a slot without corrupting
+  the grid, so it's excluded from the regridded frame rather than silently
+  colliding with a neighbor; `run_pipeline.py` prints a count per station if
+  this happens. This is, in effect, already "masking out data that isn't on
+  the grid" — if you'd rather snap those timestamps to the nearest slot instead of excluding
   them, that's a one-line change to `regrid_timestamps`.
 
 ### thresholds.csv
@@ -289,6 +305,17 @@ python run_l3.py
 Both drivers have a `CONFIG` block at the top for paths, station list, and year
 range — no need to edit the engine.
 
+All three drivers (`run_pipeline.py`, `run_l3.py`, `edit_l3.py`) need
+`local_settings.py` (see Requirements, above) for where your real data lives,
+but they don't all read *config* from the same place: `run_pipeline.py`
+`chdir`s to `local_settings.DATA_ROOT` and reads `config/<network>/*.csv`
+relative to that — i.e. whatever's currently synced to your live data folder.
+`run_l3.py` and `edit_l3.py` instead anchor config to *this repo*
+(`config/<network>/*.csv` here, regardless of where you run them from) and
+only use `local_settings.DATA_ROOT` for the real `Level_2QC`/`Level_3` data —
+the repo is the source of truth for `manual_edits.csv`, and you sync it to
+your live config yourself once you're happy with a batch of edits.
+
 ### Annual L3 workflow
 1. Run `run_pipeline.py` so L2QC is current.
 2. Review the new water year (your plotting code still works on the `_L2`/`_L3`
@@ -345,6 +372,12 @@ yourself once you're happy with a batch of edits.
 ## 6. Adding a new network
 1. `cp -r config/nevcan config/<newnet>`.
 2. Replace the four CSVs with the new network's names, thresholds, and stations.
+   Set `stations.csv`'s `sample_freq` to the new network's actual logging
+   interval (NevCAN is `"10min"`; yours might be `"1H"`, `"15min"`, `"1S"` —
+   whatever the infrastructure was built for). Getting this wrong doesn't
+   error, it silently misjudges every gap: `interp_limit`/`discontinuity_limit`
+   are sample counts, so a `sample_freq` that doesn't match the real data
+   changes what a "6-sample gap" actually means in wall-clock time.
 3. If a sensor needs special logic not covered by the tabular checks, add a
    function to `sensors.py` and reference it by name in `variables.csv`.
 4. Point the drivers at the new config (`NETWORK = "<newnet>"`).

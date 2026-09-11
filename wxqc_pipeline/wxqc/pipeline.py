@@ -14,10 +14,11 @@ so a handler may read sibling columns produced earlier this level (the snow-dept
 handler reads the L2 precip/temperature columns).
 
 Before L2's checks run, `run_level2` regrids the frame onto a continuous
-10-minute timeline (see `regrid_timestamps`) -- L1.5 keeps whatever raw
-timestamps came in, so this is the one place row *position* is made to track
-elapsed time, which every positional check (roc_check's .diff(), the run-length
-gating in fill_short_gaps) silently assumes.
+timeline at the station's own sampling interval (see `regrid_timestamps`,
+`freq=`) -- L1.5 keeps whatever raw timestamps came in, so this is the one
+place row *position* is made to track elapsed time, which every positional
+check (roc_check's .diff(), the run-length gating in fill_short_gaps) silently
+assumes.
 
 After per-variable flags are derived, three cross-variable passes run. First,
 any sensor_group with a full min/max/avg trio (sensor_role in variables.csv) is
@@ -200,8 +201,8 @@ def run_level15(df, specs, thr, station):
     return df
 
 
-def run_level2(df, specs, thr, station, dt_col="datetime_PST"):
-    df, off_grid = regrid_timestamps(df, dt_col=dt_col)
+def run_level2(df, specs, thr, station, dt_col="datetime_PST", freq="10min"):
+    df, off_grid = regrid_timestamps(df, dt_col=dt_col, freq=freq)
     if "stationid" in df.columns:
         df["stationid"] = station
     if len(off_grid):

@@ -10,3 +10,6 @@ Thumbs.db
 # Ad hoc backup files created while iterating on config
 *.bak
 *.bak_*
+
+# Machine-specific settings (real data paths) -- see local_settings.example.py
+local_settings.py

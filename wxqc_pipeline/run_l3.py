@@ -5,6 +5,12 @@ This is the human-in-the-loop annual step. It concatenates a station's L2QC
 files, trims to the period of record, applies every manual_edits.csv row for
 that station (in file order), re-derives flags, and writes Level 3.
 
+Reads `config/<network>/{variables,manual_edits}.csv` from *this repo* --
+the repo is the source of truth for config, same as edit_l3.py -- but reads
+the real `Level_2QC` data (and writes `Level_3`) at your `local_settings.py`
+DATA_ROOT. Sync `manual_edits.csv` to your live config yourself once you're
+happy with a batch of edits.
+
 Annual workflow:
   1. Run run_pipeline.py so L2QC is current.
   2. Review plots, decide on edits for the new water year.
@@ -18,11 +24,21 @@ import pandas as pd
 
 import wxqc
 
+try:
+    import local_settings
+except ModuleNotFoundError:
+    raise SystemExit(
+        "Missing local_settings.py -- copy local_settings.example.py to "
+        "local_settings.py (same folder) and fill in your own DATA_ROOT. "
+        "It's gitignored, so your real data path never ends up in shared source."
+    )
+
 # ----------------------------- CONFIG ------------------------------------- #
 NETWORK = "nevcan"
-CONFIG_DIR = Path("config") / NETWORK
-DATA_ROOT = Path(".")
-L2_QC_DIR = DATA_ROOT / "Level_2QC"
+REPO_ROOT = Path(__file__).resolve().parent
+CONFIG_DIR = REPO_ROOT / "config" / NETWORK    # source of truth: this repo
+DATA_ROOT = Path(local_settings.DATA_ROOT)
+L2_QC_DIR = DATA_ROOT / "Level_2QC"            # real data: read-only
 L3_DIR = DATA_ROOT / "Level_3"
 STATIONS = None                            # None = all, or e.g. ["nep1"]
 DT_COL = "datetime_PST"

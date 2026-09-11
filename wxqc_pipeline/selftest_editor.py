@@ -10,6 +10,7 @@ editor's live preview showed *before* saving -- the tool's core promise is
 that what you see while editing is what L3 will actually produce.
 """
 import shutil
+import tempfile
 import types
 from pathlib import Path
 
@@ -21,8 +22,7 @@ import pandas as pd
 import wxqc
 from wxqc.editor import DragEditor
 
-SCRATCH = Path(r"C:\Users\bbingham\AppData\Local\Temp\claude\c--Users-bbingham-OneDrive---Desert-Research-Institute-GitHub-station-QAQC\8051c01e-1fb6-476b-9141-7408c41fdc04\scratchpad")
-SCRATCH.mkdir(parents=True, exist_ok=True)
+SCRATCH = Path(tempfile.mkdtemp(prefix="wxqc_editor_selftest_"))
 EDITS_PATH = SCRATCH / "editor_test_manual_edits.csv"
 
 # a tiny, isolated manual_edits.csv to append to -- never touches the real one
