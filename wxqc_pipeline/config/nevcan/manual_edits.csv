@@ -1,7 +1,133 @@
 station,value_col,start,end,action,param,note,water_year,applied_by,applied_on
+nep1,T10m_max_C,2013-06-11 14:00:00,2014-10-01 08:40:00,nan,,intermittent data,2013,ah,2024-07-25
+nep1,T10m_min_C,2013-06-11 14:00:00,2014-10-01 08:40:00,nan,,intermittent data,2013,ah,2024-07-25
 nep1,T10m_avg_C,2013-06-11 14:00:00,2014-10-01 08:40:00,nan,,intermittent data,2014,ah,2024-07-25
+nep1,BP_avg_mbar,2011-10-19 09:00:00,2011-10-19 10:40:00,nan,,discontinuity - clear before interpolating,2012,ah,2024-07-25
 nep1,BP_avg_mbar,2011-10-19 09:00:00,2011-10-19 10:40:00,interpolate,,short dropout,2012,ah,2024-07-25
+nep1,SM4_avg_VWC,2011-10-01 00:00:00,2012-10-23 13:30:00,nan,,sensor not yet installed,2012,ah,2024-07-25
+nep1,SM4_avg_VWC,2013-08-27 08:30:00,2013-08-27 20:40:00,interpolate,,short dropout,2013,ah,2024-07-25
+nep1,SM4_avg_VWC,2016-06-11 13:20:00,2016-06-27 16:30:00,interpolate,,dropout,2016,ah,2024-07-25
+nep1,SM4_avg_VWC,2017-07-24 07:20:00,2017-07-24 12:20:00,interpolate,,dropout,2017,ah,2024-07-25
+nep1,SM4_avg_VWC,2018-07-12 21:20:00,2018-07-13 03:50:00,interpolate,,dropout,2018,ah,2024-07-25
+nep1,SM4_avg_VWC,2019-06-22 21:10:00,2019-06-25 03:30:00,interpolate,,dropout,2019,ah,2024-07-25
+nep1,SM4_avg_VWC,2022-09-14 08:30:00,2022-09-14 12:20:00,interpolate,,dropout,2022,ah,2024-07-25
+nep1,SM4_avg_VWC,2023-11-01 00:00:00,,rolling_median,10,noisy after this date - smoothed,2024,ah,2024-07-25
+nep1,SM8_avg_VWC,2012-10-23 10:40:00,2012-10-23 13:30:00,nan,,dropout,2013,ah,2024-07-25
+nep1,SM8_avg_VWC,2014-01-05 05:40:00,2014-01-05 08:20:00,interpolate,,dropout,2014,ah,2024-07-25
+nep1,SM8_avg_VWC,2014-01-28 19:20:00,2014-01-29 06:50:00,interpolate,,dropout,2014,ah,2024-07-25
+nep1,SM8_avg_VWC,2016-02-16 15:50:00,2016-02-16 21:20:00,interpolate,,dropout,2016,ah,2024-07-25
+nep1,SM8_avg_VWC,2023-11-01 00:00:00,,rolling_median,10,noisy after this date - smoothed,2024,ah,2024-07-25
+nep1,snowdepth_avg_mm,,,rolling_median,144,smoothed across full record,,ah,2024-07-25
 nep2,Precip_mm,2017-08-25 13:40:00,2017-08-25 14:10:00,interpolate,,sensor blip,2017,ah,2024-07-25
 nep2,SR_avg_Wm2,2019-05-16 14:10:00,,scale,0.505249545,post-swap calibration,2019,ah,2024-07-25
-nep2,ST2_avg_C,2015-06-06 12:40:00,,set_flag,S,sensor degraded after this date,2015,ah,2024-07-25
+nep2,BP_avg_mbar,,,interpolate_limit,3,fill short gaps across full record,,ah,2024-07-25
 nep2,BP_avg_mbar,2023-05-10 06:00:00,2023-05-15 00:15:00,nan,,bad pressure run,2023,ah,2024-07-25
+nep2,BP_avg_mbar,2023-05-19 17:00:00,2023-05-21 00:10:00,nan,,bad pressure run,2023,ah,2024-07-25
+nep2,BP_avg_mbar,2023-08-06 01:00:00,2023-08-13 00:10:00,nan,,bad pressure run,2023,ah,2024-07-25
+nep2,ST2_avg_C,2011-10-19 11:40:00,2011-10-19 12:30:00,interpolate,,dropout,2012,ah,2024-07-25
+nep2,ST2_avg_C,2015-06-06 12:40:00,,set_flag,S,sensor degraded after this date,2015,ah,2024-07-25
+nep2,ST4_avg_C,2011-10-19 11:40:00,2011-10-19 12:30:00,interpolate,,dropout (legacy script wrote this to an unused stray column by typo; applying the evidently-intended edit),2012,ah,2024-07-25
+nep2,ST8_avg_C,2011-10-19 11:40:00,2011-10-19 12:30:00,interpolate,,dropout,2012,ah,2024-07-25
+nep2,ST20_avg_C,2011-10-19 11:40:00,2011-10-19 12:30:00,interpolate,,dropout,2012,ah,2024-07-25
+nep2,SM4_avg_VWC,,,interpolate_limit,4,fill short gaps across full record,,ah,2024-07-25
+nep2,SM8_avg_VWC,,,interpolate_limit,4,fill short gaps across full record,,ah,2024-07-25
+nep2,snowdepth_avg_mm,,,rolling_median,144,smoothed across full record,,ah,2024-07-25
+nep3,BP_avg_mbar,,,nan_if_minute,10,drop noisy :10-past-the-hour reading,,ah,2024-07-25
+nep3,BP_avg_mbar,,,interpolate_limit,3,fill short gaps across full record,,ah,2024-07-25
+nep3,BP_avg_mbar,2013-12-06 05:20:00,2013-12-06 07:00:00,interpolate,,dropout,2014,ah,2024-07-25
+nep3,ST2_avg_C,2019-03-28 11:40:00,2019-04-04 14:10:00,nan,,erratic data - definitely poor quality,2019,ah,2024-07-25
+nep3,ST2_avg_C,2019-04-07 14:30:00,2019-04-08 05:00:00,nan,,erratic data,2019,ah,2024-07-25
+nep3,ST2_avg_C,2019-04-08 11:20:00,2019-04-10 02:00:00,nan,,erratic data,2019,ah,2024-07-25
+nep3,ST2_avg_C,2019-05-06 07:40:00,2019-05-06 12:00:00,nan,,erratic data,2019,ah,2024-07-25
+nep3,ST2_avg_C,2021-10-15 04:20:00,2021-10-15 07:00:00,nan,,erratic data,2022,ah,2024-07-25
+nep3,ST2_avg_C,2021-10-15 00:40:00,2021-10-15 07:00:00,interpolate,,bridge across the erratic window above,2022,ah,2024-07-25
+nep3,ST2_avg_C,2021-10-16 00:10:00,2021-11-26 23:00:00,nan,,extended sensor outage,2022,ah,2024-07-25
+nep3,ST2_avg_C,2021-12-29 12:40:00,2022-01-10 18:10:00,nan,,sensor outage,2022,ah,2024-07-25
+nep3,ST2_avg_C,2022-01-21 16:20:00,2022-03-08 21:10:00,nan,,sensor outage,2022,ah,2024-07-25
+nep3,ST2_avg_C,2022-07-13 12:40:00,2022-07-13 13:50:00,nan,,erratic data,2022,ah,2024-07-25
+nep3,ST2_avg_C,2023-01-16 17:00:00,2023-01-26 12:00:00,nan,,sensor outage,2023,ah,2024-07-25
+nep3,ST2_avg_C,2023-10-29 03:30:00,2023-10-29 08:50:00,nan,,erratic data,2024,ah,2024-07-25
+nep3,ST2_avg_C,2023-10-29 19:20:00,2023-10-29 22:00:00,nan,,erratic data,2024,ah,2024-07-25
+nep3,ST2_avg_C,2023-10-30 05:50:00,2023-10-30 09:10:00,nan,,erratic data,2024,ah,2024-07-25
+nep3,ST2_avg_C,2023-11-02 11:10:00,2023-11-02 14:20:00,nan,,erratic data,2024,ah,2024-07-25
+nep3,ST2_avg_C,2023-11-10 04:20:00,2023-11-10 13:50:00,nan,,erratic data,2024,ah,2024-07-25
+nep3,snowdepth_avg_mm,,,rolling_median,144,smoothed across full record,,ah,2024-07-25
+nep4,BP_avg_mbar,,,nan_if_minute,10,drop noisy :10-past-the-hour reading,,ah,2024-07-25
+nep4,BP_avg_mbar,,,interpolate_limit,3,fill short gaps across full record,,ah,2024-07-25
+nep4,ST2_avg_C,2011-10-14 09:50:00,2011-10-14 10:30:00,nan,,dropout,2012,ah,2024-07-25
+nep4,ST2_avg_C,2011-10-14 09:50:00,2011-10-14 10:30:00,interpolate,,bridge dropout above,2012,ah,2024-07-25
+nep4,ST2_avg_C,2023-07-14 20:00:00,2023-07-15 00:10:00,nan,,bad reading - not bridged,2023,ah,2024-07-25
+nep4,ST4_avg_C,2011-10-14 09:50:00,2011-10-14 10:30:00,nan,,dropout,2012,ah,2024-07-25
+nep4,ST4_avg_C,2011-10-14 09:50:00,2011-10-14 10:30:00,interpolate,,bridge dropout above,2012,ah,2024-07-25
+nep4,ST4_avg_C,2023-07-14 20:00:00,2023-07-15 00:10:00,nan,,bad reading - not bridged,2023,ah,2024-07-25
+nep4,ST8_avg_C,2011-10-14 09:50:00,2011-10-14 10:30:00,nan,,dropout,2012,ah,2024-07-25
+nep4,ST8_avg_C,2011-10-14 09:50:00,2011-10-14 10:30:00,interpolate,,bridge dropout above,2012,ah,2024-07-25
+nep4,ST20_avg_C,2011-10-14 09:50:00,2011-10-14 10:30:00,nan,,dropout,2012,ah,2024-07-25
+nep4,ST20_avg_C,2011-10-14 09:50:00,2011-10-14 10:30:00,interpolate,,bridge dropout above,2012,ah,2024-07-25
+nep4,snowdepth_avg_mm,,,rolling_median,144,smoothed across full record,,ah,2024-07-25
+nep5,T_max_C,2013-01-12 13:30:00,2013-05-26 16:10:00,set_flag,S,intermittent missing data,2013,ah,2024-07-25
+nep5,T_min_C,2013-01-12 13:30:00,2013-05-26 16:10:00,set_flag,S,intermittent missing data,2013,ah,2024-07-25
+nep5,T_avg_C,2013-01-12 13:30:00,2013-05-26 16:10:00,set_flag,S,intermittent missing data,2013,ah,2024-07-25
+nep5,T2m_max_C,2013-01-12 13:30:00,2013-05-26 16:10:00,set_flag,S,intermittent missing data,2013,ah,2024-07-25
+nep5,T2m_min_C,2013-01-12 13:30:00,2013-05-26 16:10:00,set_flag,S,intermittent missing data,2013,ah,2024-07-25
+nep5,T2m_avg_C,2013-01-12 13:30:00,2013-05-26 16:10:00,set_flag,S,intermittent missing data,2013,ah,2024-07-25
+nep5,T10m_max_C,2013-01-12 13:30:00,2013-05-26 16:10:00,set_flag,S,intermittent missing data; all 10m data at this station looks suspect; review with Greg and Scotty,2013,ah,2024-07-25
+nep5,T10m_min_C,2013-01-12 13:30:00,2013-05-26 16:10:00,set_flag,S,intermittent missing data; all 10m data at this station looks suspect; review with Greg and Scotty,2013,ah,2024-07-25
+nep5,T10m_avg_C,2013-01-12 13:30:00,2013-05-26 16:10:00,set_flag,S,intermittent missing data; all 10m data at this station looks suspect; review with Greg and Scotty,2013,ah,2024-07-25
+nep5,RH_max_pct,2013-01-12 13:30:00,2013-05-26 16:10:00,set_flag,S,intermittent missing data,2013,ah,2024-07-25
+nep5,RH_min_pct,2013-01-12 13:30:00,2013-05-26 16:10:00,set_flag,S,intermittent missing data,2013,ah,2024-07-25
+nep5,RH_avg_pct,2013-01-12 13:30:00,2013-05-26 16:10:00,set_flag,S,intermittent missing data,2013,ah,2024-07-25
+nep5,BP_avg_mbar,2011-11-30 03:00:00,2011-11-30 05:00:00,interpolate,,dropout,2012,ah,2024-07-25
+nep5,BP_avg_mbar,2012-01-15 11:00:00,2012-01-15 13:00:00,interpolate,,dropout,2012,ah,2024-07-25
+nep5,BP_avg_mbar,2012-03-06 02:00:00,2012-03-06 14:00:00,interpolate,,dropout,2012,ah,2024-07-25
+nep5,BP_avg_mbar,2012-03-07 07:00:00,2012-03-07 15:00:00,interpolate,,dropout,2012,ah,2024-07-25
+nep5,BP_avg_mbar,2012-04-06 07:00:00,2012-04-07 10:00:00,interpolate,,dropout,2012,ah,2024-07-25
+nep5,SM4_avg_VWC,2012-05-12 00:00:00,2014-10-01 17:50:00,set_flag,S,intermittent missing data,2012,ah,2024-07-25
+nep5,SM8_avg_VWC,2012-05-12 00:00:00,2014-10-01 17:50:00,set_flag,S,intermittent missing data,2012,ah,2024-07-25
+nep5,snowdepth_avg_mm,,,rolling_median,144,smoothed across full record,,ah,2024-07-25
+nep7,T_max_C,2011-11-01 11:00:00,2011-11-01 17:00:00,nan,,dropout,2012,ah,2024-07-25
+nep7,T_min_C,2011-11-01 11:00:00,2011-11-01 17:00:00,nan,,dropout,2012,ah,2024-07-25
+nep7,T_avg_C,2011-11-01 11:00:00,2011-11-01 17:00:00,nan,,dropout,2012,ah,2024-07-25
+nep7,T2m_max_C,2011-11-01 11:00:00,2011-11-01 17:00:00,nan,,dropout,2012,ah,2024-07-25
+nep7,T2m_min_C,2011-11-01 11:00:00,2011-11-01 17:00:00,nan,,dropout,2012,ah,2024-07-25
+nep7,T2m_avg_C,2011-11-01 11:00:00,2011-11-01 17:00:00,nan,,dropout,2012,ah,2024-07-25
+nep7,T10m_max_C,2011-11-01 11:00:00,2011-11-01 17:00:00,nan,,dropout,2012,ah,2024-07-25
+nep7,T10m_min_C,2011-11-01 11:00:00,2011-11-01 17:00:00,nan,,dropout,2012,ah,2024-07-25
+nep7,T10m_avg_C,2011-11-01 11:00:00,2011-11-01 17:00:00,nan,,dropout,2012,ah,2024-07-25
+nep7,RH_max_pct,2011-11-01 11:00:00,2011-11-01 17:00:00,nan,,dropout,2012,ah,2024-07-25
+nep7,RH_min_pct,2011-11-01 11:00:00,2011-11-01 17:00:00,nan,,dropout,2012,ah,2024-07-25
+nep7,RH_avg_pct,2011-11-01 11:00:00,2011-11-01 17:00:00,nan,,dropout,2012,ah,2024-07-25
+nep7,BP_avg_mbar,2011-11-01 11:00:00,2011-11-01 17:00:00,nan,,dropout,2012,ah,2024-07-25
+nep7,ST4_avg_C,2011-10-01 00:00:00,2012-10-25 13:50:00,nan,,intermittent missing data and reading erratically; sensor not yet stable,2012,ah,2024-07-25
+nep7,snowdepth_avg_mm,,,rolling_median,144,smoothed across full record,,ah,2024-07-25
+nep8,T_max_C,2011-10-15 06:40:00,2011-10-15 08:20:00,nan,,dropout,2012,ah,2024-07-25
+nep8,T_max_C,2023-05-19 17:00:00,2023-05-21 00:10:00,nan,,bad reading,2023,ah,2024-07-25
+nep8,T_min_C,2011-10-15 06:40:00,2011-10-15 08:20:00,nan,,dropout,2012,ah,2024-07-25
+nep8,T_min_C,2023-05-19 17:00:00,2023-05-21 00:10:00,nan,,bad reading,2023,ah,2024-07-25
+nep8,T_avg_C,2011-10-15 06:40:00,2011-10-15 08:20:00,nan,,dropout,2012,ah,2024-07-25
+nep8,T_avg_C,2023-05-19 17:00:00,2023-05-21 00:10:00,nan,,bad reading,2023,ah,2024-07-25
+nep8,T2m_max_C,2011-10-15 06:40:00,2011-10-15 08:20:00,nan,,dropout,2012,ah,2024-07-25
+nep8,T2m_max_C,2023-05-19 17:00:00,2023-05-21 00:10:00,nan,,bad reading,2023,ah,2024-07-25
+nep8,T2m_min_C,2011-10-15 06:40:00,2011-10-15 08:20:00,nan,,dropout,2012,ah,2024-07-25
+nep8,T2m_min_C,2023-05-19 17:00:00,2023-05-21 00:10:00,nan,,bad reading,2023,ah,2024-07-25
+nep8,T2m_avg_C,2011-10-15 06:40:00,2011-10-15 08:20:00,nan,,dropout,2012,ah,2024-07-25
+nep8,T2m_avg_C,2023-05-19 17:00:00,2023-05-21 00:10:00,nan,,bad reading,2023,ah,2024-07-25
+nep8,T10m_max_C,2011-10-15 06:40:00,2011-10-15 08:20:00,nan,,dropout,2012,ah,2024-07-25
+nep8,T10m_min_C,2011-10-15 06:40:00,2011-10-15 08:20:00,nan,,dropout,2012,ah,2024-07-25
+nep8,T10m_avg_C,2011-10-15 06:40:00,2011-10-15 08:20:00,nan,,dropout,2012,ah,2024-07-25
+nep8,BP_avg_mbar,2012-12-19 05:50:00,2012-12-19 19:00:00,interpolate,,dropout,2013,ah,2024-07-25
+nep8,ST2_avg_C,2023-05-19 17:00:00,2023-05-21 00:10:00,nan,,bad reading,2023,ah,2024-07-25
+nep8,ST2_avg_C,2023-06-11 13:50:00,2023-06-11 14:30:00,nan,,bad reading,2023,ah,2024-07-25
+nep8,ST2_avg_C,2023-07-14 20:00:00,2023-07-15 00:10:00,nan,,bad reading (date range corrected - legacy script had end before start; best-guess match to nep4's analogous 2023-07-14 event - please confirm),2023,ah,2024-07-25
+nep8,ST2_avg_C,2023-08-03 08:00:00,2023-08-04 00:10:00,nan,,bad reading,2023,ah,2024-07-25
+nep8,ST4_avg_C,2011-10-15 06:40:00,2011-10-15 08:20:00,nan,,dropout,2012,ah,2024-07-25
+nep8,ST4_avg_C,2023-06-11 13:50:00,2023-06-11 14:30:00,nan,,bad reading,2023,ah,2024-07-25
+nep8,ST4_avg_C,2023-07-14 20:00:00,2023-07-15 00:10:00,nan,,bad reading (date range corrected - see ST2 note),2023,ah,2024-07-25
+nep8,ST4_avg_C,2023-08-03 08:00:00,2023-08-04 00:10:00,nan,,bad reading,2023,ah,2024-07-25
+nep8,ST8_avg_C,2023-08-03 08:00:00,2023-08-04 00:10:00,nan,,bad reading,2023,ah,2024-07-25
+nep8,SM4_avg_VWC,2011-10-01 00:00:00,2012-10-25 13:00:00,set_flag,S,intermittent missing data and reading erratically,2012,ah,2024-07-25
+nep8,SM8_avg_VWC,2011-10-01 00:00:00,2012-10-25 13:00:00,set_flag,S,intermittent missing data and reading erratically,2012,ah,2024-07-25
+nep8,snowdepth_avg_mm,,,rolling_median,144,smoothed across full record,,ah,2024-07-25
+nep9,BP_avg_mbar,,,nan_if_gt,850,sanity ceiling,,ah,2024-07-25
+nep9,BP_avg_mbar,2017-03-11 07:30:00,,nan,,data collection unreliable in winter after this date - reliable mainly in summer/fall,2017,ah,2024-07-25
+nep9,snowdepth_avg_mm,,,rolling_median,144,smoothed across full record (if sensor present at this station),,ah,2024-07-25

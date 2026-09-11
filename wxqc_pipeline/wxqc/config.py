@@ -16,7 +16,26 @@ class VarSpec:
     range_action: str = "nan"      # nan | clamp_high_100 | nan_or_zero | clamp | keep
     roc_key: str = ""              # key into thresholds.csv (single value); "" = no ROC check
     interp_limit: Optional[int] = None   # max gap (samples) to fill at L2; None = no fill
+    discontinuity_limit: Optional[int] = None  # max gap (samples) eligible for the ROC-scaled
+                                    # discontinuity check (needs roc_key); None = feature off,
+                                    # falls back to interp_limit's plain length-based fill
     handler: str = ""              # name in sensors.HANDLERS; "" = none
+    sensor_group: str = ""         # variables sharing this key are drawn on one QC plot
+                                    # instead of one each (e.g. max/min/avg from one physical
+                                    # sensor); "" = own plot (default)
+    sensor_role: str = ""          # this variable's role within sensor_group: "min", "max",
+                                    # or "avg"; a group with all three gets a min<=avg<=max
+                                    # consistency check (see pipeline._apply_group_consistency).
+                                    # "" = not part of a consistency check
+    depends_on: str = ""           # another sensor_group name; if any member of that group is
+                                    # flagged Suspect at a timestamp, this variable is flagged
+                                    # Suspect too (see pipeline._apply_group_dependency), e.g. RH
+                                    # depending on T (same physical probe). "" = no dependency
+    suspect_if_var: str = ""       # another variable's value_col; if its own value at this level
+    suspect_if_gt: Optional[float] = None  # exceeds suspect_if_gt, this variable is flagged
+                                    # Suspect (see pipeline._apply_value_dependency), e.g. T/T2m
+                                    # flagged Suspect when snow depth buries the sensor.
+                                    # "" / blank = no dependency
 
 
 class Thresholds:
@@ -43,6 +62,8 @@ def load_variables(path):
     specs = []
     for _, r in raw.iterrows():
         il = str(r["interp_limit"]).strip()
+        dl = str(r.get("discontinuity_limit", "")).strip()
+        sig = str(r.get("suspect_if_gt", "")).strip()
         specs.append(VarSpec(
             value_col=r["value_col"],
             flag_col=r["flag_col"],
@@ -50,7 +71,13 @@ def load_variables(path):
             range_action=(str(r["range_action"]).strip() or "nan"),
             roc_key=str(r["roc_key"]).strip(),
             interp_limit=(int(float(il)) if il not in ("", "nan") else None),
+            discontinuity_limit=(int(float(dl)) if dl not in ("", "nan") else None),
             handler=str(r["handler"]).strip(),
+            sensor_group=str(r.get("sensor_group", "")).strip(),
+            sensor_role=str(r.get("sensor_role", "")).strip(),
+            depends_on=str(r.get("depends_on", "")).strip(),
+            suspect_if_var=str(r.get("suspect_if_var", "")).strip(),
+            suspect_if_gt=(float(sig) if sig not in ("", "nan") else None),
         ))
     return specs
 

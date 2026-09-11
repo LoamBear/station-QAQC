@@ -1,0 +1,8 @@
+# Normalize text files to LF in the repository, regardless of a
+# collaborator's own core.autocrlf setting or OS/editor -- avoids the
+# "every line differs" false alarm when comparing a checkout against
+# another copy (e.g. a synced live config) that used the other convention.
+* text=auto eol=lf
+
+# Never diff/normalize compiled bytecode as text
+*.pyc binary
