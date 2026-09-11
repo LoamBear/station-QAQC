@@ -1,0 +1,12 @@
+# Python bytecode / cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor / OS cruft
+.DS_Store
+Thumbs.db
+
+# Ad hoc backup files created while iterating on config
+*.bak
+*.bak_*

@@ -110,7 +110,8 @@ SNOW DEPTH  (acknowledged as the least-mature part of the pipeline)
   ●  snowdepth_dynamic handler + plain range check — that's the entire
      automated treatment today
   ○  PLANNED: incorporate logic from the legacy interactive scripts
-     (NevCAN_snowdepth_L3*.ipy) — reviewed this session, not yet ported
+     (config/nevcan/legacy_reference/NevCAN_snowdepth_L3*.ipy) — reviewed
+     this session, not yet ported
   ○  PLANNED: re-wire suspect_if_var once snow-depth QC is trusted enough
      to drive other variables' flags again
 ```
